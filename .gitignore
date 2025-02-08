@@ -1,0 +1,76 @@
+# ========== 基本规则 ==========
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 目录 & 临时文件
+*.log
+*.out
+*.err
+*.swp
+*.swo
+*.bak
+.DS_Store
+Thumbs.db
+
+# ========== Python 相关 ==========
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+*.egg
+*.manifest
+*.spec
+*.ipynb_checkpoints/
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+poetry.lock
+
+# ========== Jupyter Notebook 相关 ==========
+.ipynb_checkpoints/
+profile_default/
+.ipython/
+
+# ========== PyTorch & TensorFlow 相关 ==========
+*.h5
+*.hdf5
+*.ckpt
+*.onnx
+*.tflite
+*.pb
+checkpoint
+logs/
+wandb/
+lightning_logs/
+
+# ========== VS Code 相关 ==========
+.vscode/
+*.code-workspace
+
+# ========== 运行时 & 缓存文件 ==========
+*.pid
+*.seed
+*.session
+*.state
+*.npy
+*.npz
+
+# ========== macOS & Windows 相关 ==========
+*.DS_Store
+*.AppleDouble
+*.LSOverride
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# ========== Conda & Virtualenv ==========
+conda-meta/
+*.conda
+*.env
+*.venv
+
+
