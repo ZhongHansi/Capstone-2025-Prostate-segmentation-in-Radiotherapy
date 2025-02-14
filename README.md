@@ -15,3 +15,8 @@ This repository is in its early stages. The codebase is being set up. In the fut
 Created project structure. 创建了项目结构。
 
 Added README 添加了 README。
+
+## Next Steps
+
+* Prepare for the Data
+* Implement the Baseline model
