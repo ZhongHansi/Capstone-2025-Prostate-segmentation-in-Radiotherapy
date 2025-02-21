@@ -17,8 +17,9 @@ Created project structure. 创建了项目结构。
 Added README 添加了 README。
 
 [v0.2] Update UNet Backbone based on MedSegDiff 更新UNet网络主干（基于MedSegDiff源码） - 2025/02/20  
+Introduced Gaussion Diffusion from MedSegDiff - 2025/02/21
 
 ## Next Steps
 
-* Prepare for the Data
-* Implement the Baseline model
+* Finish Data Preparation
+* Finalize and test the UNet Initialization with sample inputs.
