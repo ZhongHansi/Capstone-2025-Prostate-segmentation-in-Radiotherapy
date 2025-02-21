@@ -16,6 +16,8 @@ Created project structure. 创建了项目结构。
 
 Added README 添加了 README。
 
+[v0.2] Update UNet Backbone based on MedSegDiff 更新UNet网络主干（基于MedSegDiff源码） - 2025/02/20  
+
 ## Next Steps
 
 * Prepare for the Data
