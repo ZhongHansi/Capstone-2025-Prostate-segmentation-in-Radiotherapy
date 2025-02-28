@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from UNet import UNetModel_newpreview
+from .UNet import UNetModel_newpreview
 from .respace import SpacedDiffusion, space_timesteps
 from . import gaussian_diffusion as gd
 
@@ -23,6 +23,32 @@ class MedSegDiffV1(nn.Module):
             dropout=0.1, channel_mult=(1, 1, 2, 2, 4, 4),
         )
         self.diffusion = create_gaussian_diffusion(steps=diffusion_steps)
+
+    def forward(self, x, timesteps):
+        """
+
+        :param x: input MRI image (batch, 1, 256, 256)
+        :param timesteps: Diffusion timestep (batch, )
+        :return: predicted segementation (batch, num_classes, 256, 256)
+        """
+        # Unet process
+        unet_output, _ = self.unet(x, timesteps)
+
+        # Diffusion process
+        diffusion_output = self.diffusion(unet_output, timesteps)
+
+        return diffusion_output
+
+    def sample(self, x, num_steps=100):
+        """
+        Reverse diffusion sampling to obtain final segmentation prediction.
+        :param x: Initial noise input
+        :param num_steps: Number of sampling steps
+        :return: segmentation prediction
+        """
+        for t in reversed(range(num_steps)):
+            x = self.diffusion.reverse_step(x, t)
+        return x
 
 # Introducing Gaussian Diffusion function from MedSegDiff script_util.py
 def create_gaussian_diffusion(
@@ -66,3 +92,13 @@ def create_gaussian_diffusion(
         dpm_solver=dpm_solver,
         rescale_timesteps=rescale_timesteps,
     )
+
+
+# Test the model
+dummy_input = torch.randn(2, 1, 256, 256)  # input MRI images
+timesteps = torch.randint(0, 100, (2,))  # Random timesteps
+
+model = MedSegDiffV1(num_classes=2)
+output = model(dummy_input, timesteps)
+
+print("Model output shape:", output.shape)  # Expected (2, 2, 256, 256)
