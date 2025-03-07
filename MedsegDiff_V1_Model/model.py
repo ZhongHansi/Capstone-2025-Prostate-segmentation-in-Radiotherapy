@@ -102,13 +102,3 @@ def create_gaussian_diffusion(
         dpm_solver=dpm_solver,
         rescale_timesteps=rescale_timesteps,
     )
-
-
-# Test the model
-dummy_input = torch.randn(2, 1, 256, 256)  # input MRI images
-timesteps = torch.randint(0, 100, (2,))  # Random timesteps
-
-model = MedSegDiffV1(num_classes=2)
-output = model(dummy_input, timesteps)
-
-print("Model output shape:", output.shape)  # Expected (2, 2, 256, 256)
