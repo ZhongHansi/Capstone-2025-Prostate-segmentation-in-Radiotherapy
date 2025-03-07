@@ -1,12 +1,12 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from .UNet import UNetModel_newpreview
+from MedsegDiff_V1_Model.UNet import UNetModel_newpreview
 from .respace import SpacedDiffusion, space_timesteps
 from . import gaussian_diffusion as gd
 
 class MedSegDiffV1(nn.Module):
-    def __init__(self, num_classes=2, num_channels=1, diffusion_steps=100):
+    def __init__(self, image_size=256, num_classes=2, num_channels=1, attention_resolutions="16", diffusion_steps=100):
         """
         MedSegDiff V1 for prostate segmentation
 
@@ -17,10 +17,18 @@ class MedSegDiffV1(nn.Module):
         super(MedSegDiffV1, self).__init__()
 
         # Use UNet as Diffusion Backbone
+        attention_ds = []
+        for res in attention_resolutions.split(","):
+            attention_ds.append(image_size // int(res))
         self.unet = UNetModel_newpreview(
-            image_size=256, in_channels=num_channels,
-            out_channels=num_classes, attention_resolutions=[16],
-            dropout=0.1, channel_mult=(1, 1, 2, 2, 4, 4),
+            image_size=image_size, 
+            in_channels=num_channels,
+            out_channels=num_classes, 
+            attention_resolutions=tuple(attention_ds),
+            dropout=0.1, 
+            channel_mult=(1, 1, 2, 2, 4, 4), 
+            model_channels=64,
+            num_res_blocks=2,
         )
         self.diffusion = create_gaussian_diffusion(steps=diffusion_steps)
 
@@ -32,9 +40,11 @@ class MedSegDiffV1(nn.Module):
         :return: predicted segementation (batch, num_classes, 256, 256)
         """
         # Unet process
+        print(f"DEBUG: Input to UNet shape: {x.shape}")  # Debugging
         unet_output, _ = self.unet(x, timesteps)
 
         # Diffusion process
+        print(f"DEBUG: Output from UNet shape: {unet_output.shape}")  # Debugging
         diffusion_output = self.diffusion(unet_output, timesteps)
 
         return diffusion_output
