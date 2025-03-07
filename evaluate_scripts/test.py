@@ -1,4 +1,5 @@
 from MedsegDiff_V1_Model.model import MedSegDiffV1
+from MedsegDiff_V1_Model.UNet import UNetModel_newpreview
 from .eval import evaluate_model
 import torch
 import torchvision.transforms as transforms
@@ -53,12 +54,22 @@ data_loader = data.DataLoader(dataset, batch_size=1, shuffle=False)
 # Load model and do evaluation
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # load model
-model_path = "../model/savedmodel105000.pt"
-model = torch.load(model_path)
-print(model)
+image_size = 256
+attention_resolutions = "16"
+attention_ds = []
+for res in attention_resolutions.split(","):
+    attention_ds.append(image_size // int(res))
+model = UNetModel_newpreview(image_size=256,
+                            in_channels=2,
+                            model_channels=128,
+                            out_channels=2,
+                            num_res_blocks=2,
+                            attention_resolutions=tuple(attention_ds),)
 model = model.to(device)
+model_path = "../model/savedmodel105000.pt"
+model.load_part_state_dict(torch.load(model_path))
+
 model.eval()  
-print("Load Model Success")
 
 with torch.no_grad():
     for images, file_names in data_loader:
