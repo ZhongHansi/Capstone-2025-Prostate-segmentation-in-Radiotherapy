@@ -71,8 +71,8 @@ def evaluate_model(model, dataloader, device):
             #target = torch.where(target == 2, torch.tensor(1), target) # original [0,1,2] ->[0,1]
             target = target.cpu()
             pred = (pred > 0.5).float()
-            print("Unique values in pred:", torch.unique(pred))
-            print("Unique values in target:", torch.unique(target))
+            #print("Unique values in pred:", torch.unique(pred))
+            #print("Unique values in target:", torch.unique(target))
             # Compute scores
             dice_scores.append(dice_score(pred, target))
             iou_scores.append(iou_score(pred, target))

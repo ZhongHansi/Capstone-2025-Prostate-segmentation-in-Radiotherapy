@@ -19,7 +19,14 @@ Added README 添加了 README。
 [v0.2] Update UNet Backbone based on MedSegDiff 更新UNet网络主干（基于MedSegDiff源码） - 2025/02/20  
 Introduced Gaussion Diffusion from MedSegDiff - 2025/02/21
 
+[v0.3] Initialize model evaluation scripts, prepare for model training - 2025/02/28
+
+[v0.4] First model trained -2025/03/07
+update custom data loader and model loader
+
+[v0.5] Update evaluation scripts and fixing data loader and model loader -2025/03/14
+Model evaluation finished
+
 ## Next Steps
 
-* Finish Data Preparation
-* Finalize and test the UNet Initialization with sample inputs.
+* Try to improve the model performance

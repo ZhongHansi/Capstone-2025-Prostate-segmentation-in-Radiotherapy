@@ -40,6 +40,8 @@ class SlicedNiiDataset(Dataset):
             image_data = np.transpose(image_data, (2, 3, 0, 1))
             slice_idx = image_data.shape[0] // 2 
             self.image_slices.append(image_data[slice_idx])
+            #for slice_idx in range(image_data.shape[0]// 2 + 2,image_data.shape[0]// 2 + 2): 
+                #self.image_slices.append(image_data[slice_idx])
 
         for file in self.label_nii_files:
             file_path = os.path.join(label_path, file)
@@ -50,6 +52,8 @@ class SlicedNiiDataset(Dataset):
             label_data = np.transpose(label_data, (2, 0, 1))
             slice_idx = label_data.shape[0] // 2 
             self.label_slices.append(label_data[slice_idx])
+            #for slice_idx in range(label_data.shape[0]// 2 - 2,label_data.shape[0]// 2 + 2):  
+                #self.label_slices.append(label_data[slice_idx])
 
     def __len__(self):
         return len(self.image_slices)
