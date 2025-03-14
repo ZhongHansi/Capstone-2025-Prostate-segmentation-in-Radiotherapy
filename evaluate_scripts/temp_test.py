@@ -5,17 +5,10 @@ import os
 import nibabel as nib
 import matplotlib.pyplot as plt
 import numpy as np
-import argparse
-from MedsegDiff_V1_Model.UNet import UNetModel_newpreview
-from MedsegDiff_V1_Model.script_util import (
-    NUM_CLASSES,
-    model_and_diffusion_defaults,
-    create_model_and_diffusion,
-    add_dict_to_argparser,
-    args_to_dict,
-)
+from .model_loader import custom_model_loader
+
 # Load Dataset
-data_path = "../Datasets/Dataset001_Prostate158/test"
+data_path = "../Datasets/Test/images"
 tran_list = [transforms.Resize((256,256)), transforms.ToTensor()]
 transform_test = transforms.Compose(tran_list)
 
@@ -32,33 +25,39 @@ for file in nii_files:
 
 # Load model and do evaluation
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-# load model
-image_size = 256
-attention_resolutions = "16"
-attention_ds = []
-for res in attention_resolutions.split(","):
-    attention_ds.append(image_size // int(res))
-model = UNetModel_newpreview(image_size=256,
-                            in_channels=2,
-                            model_channels=128,
-                            out_channels=2,
-                            num_res_blocks=2,
-                            attention_resolutions=tuple(attention_ds),)
-model = model.to(device)
-model_path = "../model/savedmodel105000.pt"
-model.load_part_state_dict(torch.load(model_path))
+model = custom_model_loader("../model/savedmodel105000.pt")
+#print(model)
+dummy_input = torch.randn(1, 2, 256, 256).to(device)  # (batch_size=1, in_channels=2, H=256, W=256)
+timesteps = torch.tensor([50],device=device)
+output = model(dummy_input,timesteps)
 
-model.eval()  
-print("Load Model Success")
+# print output shape
+print(type(output)) 
+print(len(output))   
+print(output[0].shape) 
 
+pred = output[0].squeeze(0)
+print("Unique values in pred:", torch.unique(pred[0]))
+print(pred.shape)
+#plt.subplot(1, 2, 1)
+#plt.imshow(pred[0].cpu().detach().numpy(), cmap="gray")
+#plt.title("Output Channel 0")
 
+#plt.subplot(1, 2, 2)
+#plt.imshow(pred[1].cpu().detach().numpy(), cmap="gray")
+#plt.title("Output Channel 1")
+
+#plt.show()
 def show_image_sample():
     sample_idx = 0  
     image_data = image_list[sample_idx]
     slice_idx = image_data.shape[2] // 2 
     slice_img = image_data[:, :, slice_idx]
+    slice_img = slice_img[:,:,1]
+    print("Unique values in target:", torch.unique(torch.tensor(slice_img)))
     plt.imshow(slice_img, cmap="gray")
     plt.title(f"Middle Slice of {nii_files[sample_idx]}")
     plt.axis("off")
     plt.show()
 
+show_image_sample()

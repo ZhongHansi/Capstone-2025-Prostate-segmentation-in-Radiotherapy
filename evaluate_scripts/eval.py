@@ -10,9 +10,8 @@ def dice_score(pred, target, smooth=1e-6):
     """
     pred = torch.sigmoid(pred)  
     pred = (pred > 0.5).float()  # Binarize the predictions 二值化
-
-    intersection = (pred * target).sum(dim=(1, 2, 3))  # Compute intersection
-    union = pred.sum(dim=(1, 2, 3)) + target.sum(dim=(1, 2, 3))  # Compute union
+    intersection = (pred * target).sum()  # Compute intersection
+    union = pred.sum() + target.sum()  # Compute union
 
     dice = (2. * intersection + smooth) / (union + smooth)
     return dice.mean().item()  # Return mean Dice score
@@ -28,8 +27,8 @@ def iou_score(pred, target, smooth=1e-6):
     pred = torch.sigmoid(pred)  
     pred = (pred > 0.5).float()  
 
-    intersection = (pred * target).sum(dim=(1, 2, 3))
-    union = (pred + target).sum(dim=(1, 2, 3)) - intersection  # union
+    intersection = (pred * target).sum()
+    union = (pred + target).sum() - intersection  # union
 
     iou = (intersection + smooth) / (union + smooth)
     return iou.mean().item()
@@ -66,9 +65,14 @@ def evaluate_model(model, dataloader, device):
 
             # predict segmentation
             output = model(img, torch.tensor([0]).to(device))  
-            pred = output.argmax(dim=1).cpu()  # get the (batch, H, W)
+            pred = output[0].squeeze(0)
+            pred = pred[0].cpu()  # get the (batch, H, W)
+            target = target.squeeze(0)
+            #target = torch.where(target == 2, torch.tensor(1), target) # original [0,1,2] ->[0,1]
             target = target.cpu()
-
+            pred = (pred > 0.5).float()
+            print("Unique values in pred:", torch.unique(pred))
+            print("Unique values in target:", torch.unique(target))
             # Compute scores
             dice_scores.append(dice_score(pred, target))
             iou_scores.append(iou_score(pred, target))
