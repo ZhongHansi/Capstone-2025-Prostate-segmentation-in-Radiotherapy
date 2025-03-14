@@ -13,7 +13,7 @@ def diffusion_defaults():
     Defaults for image and classifier training.
     """
     return dict(
-        learn_sigma=False,
+        learn_sigma=True, # Default as False in source code
         diffusion_steps=1000,
         noise_schedule="linear",
         timestep_respacing="",
@@ -45,19 +45,19 @@ def model_and_diffusion_defaults():
     Defaults for image training.
     """
     res = dict(
-        image_size=64,
+        image_size=256,
         num_channels=128,
         num_res_blocks=2,
-        num_heads=4,
-        in_ch = 5,
+        num_heads=1,
+        in_ch = 2, # Default as 5 in source code
         num_heads_upsample=-1,
         num_head_channels=-1,
-        attention_resolutions="16,8",
+        attention_resolutions="16", # "16,8" in source code
         channel_mult="",
         dropout=0.0,
         class_cond=False,
         use_checkpoint=False,
-        use_scale_shift_norm=True,
+        use_scale_shift_norm=False, # True in source code
         resblock_updown=False,
         use_fp16=False,
         use_new_attention_order=False,
