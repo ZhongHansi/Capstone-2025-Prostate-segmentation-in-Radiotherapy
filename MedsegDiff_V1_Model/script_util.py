@@ -3,8 +3,7 @@ import inspect
 
 from . import gaussian_diffusion as gd
 from .respace import SpacedDiffusion, space_timesteps
-from .UNet import  UNetModel_newpreview 
-#SuperResModel,UNetModel_v1preview, EncoderUNetModel
+from .unet_copy import  UNetModel_newpreview,SuperResModel,UNetModel_v1preview, EncoderUNetModel
 NUM_CLASSES = 2
 
 
@@ -62,7 +61,7 @@ def model_and_diffusion_defaults():
         use_fp16=False,
         use_new_attention_order=False,
         dpm_solver = False,
-        version = 'new',
+        version = 'v1',
     )
     res.update(diffusion_defaults())
     return res

@@ -1,5 +1,5 @@
 import torch
-
+import matplotlib.pyplot as plt
 def dice_score(pred, target, smooth=1e-6):
     """
     calculate Dice
@@ -55,6 +55,15 @@ def hd95(pred, target):
 
     return np.percentile(distances_1 + distances_2, 95)  # Compute 95%
 
+def target_plot(pred,target):
+    plt.subplot(1, 2, 1)
+    plt.imshow(pred.numpy(), cmap="gray")
+    plt.title("Predicted Mask")
+
+    plt.subplot(1, 2, 2)
+    plt.imshow(target.numpy(), cmap="gray")
+    plt.title("Ground Truth")
+    plt.show()
 def evaluate_model(model, dataloader, device):
     model.eval()
     dice_scores, iou_scores, hd95_scores = [], [], []
@@ -71,6 +80,7 @@ def evaluate_model(model, dataloader, device):
             #target = torch.where(target == 2, torch.tensor(1), target) # original [0,1,2] ->[0,1]
             target = target.cpu()
             pred = (pred > 0.5).float()
+            target_plot(pred,target)
             #print("Unique values in pred:", torch.unique(pred))
             #print("Unique values in target:", torch.unique(target))
             # Compute scores
