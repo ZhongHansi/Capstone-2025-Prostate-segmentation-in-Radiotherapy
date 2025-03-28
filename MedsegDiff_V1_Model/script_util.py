@@ -61,7 +61,7 @@ def model_and_diffusion_defaults():
         use_fp16=False,
         use_new_attention_order=False,
         dpm_solver = False,
-        version = 'v1',
+        version = 'new',
     )
     res.update(diffusion_defaults())
     return res
