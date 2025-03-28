@@ -48,5 +48,5 @@ def custom_model_loader(path="../model/savedmodel105000.pt"):
     model.eval()  
     print("Load Model Success")
 
-    return model
+    return model,diffusion
 
