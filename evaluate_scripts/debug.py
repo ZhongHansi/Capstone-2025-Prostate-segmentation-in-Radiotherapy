@@ -100,8 +100,8 @@ with torch.no_grad():
 
     # plot
     plt.figure(figsize=(12,4))
-    plt.subplot(1,3,1); plt.imshow(img_vis[0], cmap='gray'); plt.title('Input Image')
-    plt.subplot(1,3,2); plt.imshow(pred_vis, cmap='gray'); plt.title('Predicted Mask')
+    plt.subplot(1,3,1); plt.imshow(img_vis[0], cmap='gray'); plt.title('Input Image channel 1')
+    plt.subplot(1,3,2); plt.imshow(img_vis[1], cmap='gray'); plt.title('Input Image channel 2')
     plt.subplot(1,3,3); plt.imshow(label_vis, cmap='gray'); plt.title('Ground Truth')
     plt.tight_layout()
     plt.show()

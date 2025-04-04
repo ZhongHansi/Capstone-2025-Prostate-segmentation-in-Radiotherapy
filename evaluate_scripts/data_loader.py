@@ -39,8 +39,6 @@ class SlicedNiiDataset(Dataset):
             image_data = nii_image.get_fdata()  # (H, W, D, C)
 
             image_data = np.transpose(image_data, (2, 3, 0, 1))
-            #slice_idx = image_data.shape[0] // 2 
-            #self.image_slices.append(image_data[slice_idx])
             for slice_idx in range(image_data.shape[0]): 
                 self.image_slices.append(image_data[slice_idx])
 
@@ -51,8 +49,6 @@ class SlicedNiiDataset(Dataset):
 
             
             label_data = np.transpose(label_data, (2, 0, 1))
-            #slice_idx = label_data.shape[0] // 2 
-            #self.label_slices.append(label_data[slice_idx])
             for slice_idx in range(label_data.shape[0]):  
                 self.label_slices.append(label_data[slice_idx])
 
@@ -67,11 +63,10 @@ class SlicedNiiDataset(Dataset):
         label = torch.tensor(label, dtype=torch.long)
         if self.transform:
             image = self.transform(image)  
-            #label = self.transform(label)
-        #if label.ndim == 2:
-            #label = label.unsqueeze(0)
-        #label = F.interpolate(label.unsqueeze(0).float(), size=(256, 256), mode='nearest').long().squeeze(0)
-        #label = label.squeeze(0)
+            label = self.transform(label)
+        # Resize
+        
+        
 
         return image,label
 

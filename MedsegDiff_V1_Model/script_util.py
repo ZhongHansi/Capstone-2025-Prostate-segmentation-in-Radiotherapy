@@ -60,7 +60,7 @@ def model_and_diffusion_defaults():
         resblock_updown=False,
         use_fp16=False,
         use_new_attention_order=False,
-        dpm_solver = False,
+        dpm_solver = True,
         version = 'new',
     )
     res.update(diffusion_defaults())

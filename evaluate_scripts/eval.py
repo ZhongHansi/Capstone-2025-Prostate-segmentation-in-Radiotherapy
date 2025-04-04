@@ -2,6 +2,9 @@ import torch
 import matplotlib.pyplot as plt
 from medpy.metric.binary import hd95
 from SimpleITK import STAPLE
+import os
+from tqdm import tqdm
+
 def dice_score(pred, target, smooth=1e-6):
     """
     calculate Dice
@@ -72,6 +75,7 @@ def target_plot(pred,target,img):
     plt.imshow(img.numpy(), cmap="gray")
     plt.title("Origin Image")
     plt.show()
+
 def evaluate_model(model, dataloader, device):
     model.eval()
     dice_scores, iou_scores, hd95_scores = [], [], []
@@ -170,37 +174,81 @@ def run_staple(preds):
     staple_result = (staple_result > 0.5).astype(np.float32)
     return staple_result
 
-def evaluate_model_staple(model, dataloader, device, num_samples=25):
+def visualize_prediction(pred, target, step, save_dir=None):
+    """
+    Visualize pred vs target, save if needed
+    """
+    plt.figure(figsize=(12,4))
+    
+    plt.subplot(1,3,1)
+    plt.title('Predicted Mask')
+    plt.imshow(pred, cmap='gray')
+    
+    plt.subplot(1,3,2)
+    plt.title('Ground Truth')
+    plt.imshow(target, cmap='gray')
+    
+    plt.subplot(1,3,3)
+    plt.title('Difference')
+    plt.imshow(np.abs(pred - target), cmap='hot')
+
+    if save_dir:
+        os.makedirs(save_dir, exist_ok=True)
+        plt.savefig(f"{save_dir}/vis_step_{step}.png")
+    else:
+        plt.show()
+
+    plt.close()
+
+def evaluate_model_staple(model, dataloader, device, diffusion, num_samples=25,diffusion_step = 20,vis_freq=10, save_dir=None):
     model.eval()
     dice_scores, iou_scores, hd95_scores = [], [], []
+    pbar = tqdm(enumerate(dataloader), total=len(dataloader), desc="Evaluating")
 
     with torch.no_grad():
-        for img, target in dataloader:
+        for step, (img, target) in pbar:
             img, target = img.to(device), target.to(device)
-
+            img = 2 * img - 1   # Diffusion normalize
             # --- Diffusion sampling N times ---
             preds = []
+            model_kwargs={}
             for _ in range(num_samples):
-                output = model(img, torch.tensor([0]).to(device))  # Note: adjust if model expects timestep
-                pred = output[0].squeeze(0)[0].cpu()  # assume pred shape is (2,H,W)
+                #output = model(img, torch.tensor([0]).to(device))  
+                sample, *_ = diffusion.p_sample_loop_known(
+                        model,
+                        img.shape,
+                        img,
+                        step = diffusion_step,
+                        clip_denoised=True,
+                        model_kwargs=model_kwargs
+                    )
+                pred = sample[0].squeeze(0).cpu()
                 pred = pred / (pred.max() + 1e-8)    # avoid divide by 0
                 pred = (pred > 0.3).float()
                 preds.append(pred.numpy())
 
             # --- STAPLE Ensemble ---
             staple_pred = run_staple(preds)
-
             # --- Prepare target ---
             target = target.squeeze(0).cpu()
             target = torch.where(target == 2, torch.tensor(1), target).numpy()  # map label 2 -> 1
 
             # --- Metrics ---
-            dice_scores.append(dice_score(torch.tensor(staple_pred), torch.tensor(target)))
-            iou_scores.append(iou_score(torch.tensor(staple_pred), torch.tensor(target)))
+            dice_scores.append(dice_score(torch.tensor(staple_pred[0]), torch.tensor(target)))
+            iou_scores.append(iou_score(torch.tensor(staple_pred[0]), torch.tensor(target)))
             if staple_pred.sum() > 0 and target.sum() > 0:
-                hd95_scores.append(hd95(staple_pred, target))
+                hd95_scores.append(hd95(staple_pred[0], target))
             else:
                 hd95_scores.append(np.inf)  # no prediction or ground truth
+            
+            if step % vis_freq == 0:
+                visualize_prediction(staple_pred[0], target, step, save_dir=save_dir)
+
+            pbar.set_postfix({
+                "Dice": f"{np.mean(dice_scores):.4f}",
+                "IoU": f"{np.mean(iou_scores):.4f}",
+                "HD95": f"{np.mean(hd95_scores):.2f}"
+            })
 
     # --- Report ---
     print("="*50)
