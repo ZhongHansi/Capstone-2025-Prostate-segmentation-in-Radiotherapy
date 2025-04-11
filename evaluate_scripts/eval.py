@@ -200,7 +200,7 @@ def visualize_prediction(pred, target, step, save_dir=None):
 
     plt.close()
 
-def evaluate_model_staple(model, dataloader, device, diffusion, num_samples=25,diffusion_step = 20,vis_freq=10, save_dir=None):
+def evaluate_model_staple(model, dataloader, device, diffusion, num_samples=25,diffusion_step = 20,vis_freq=5, save_dir=None):
     model.eval()
     dice_scores, iou_scores, hd95_scores = [], [], []
     pbar = tqdm(enumerate(dataloader), total=len(dataloader), desc="Evaluating")
@@ -213,36 +213,52 @@ def evaluate_model_staple(model, dataloader, device, diffusion, num_samples=25,d
             preds = []
             model_kwargs={}
             for _ in range(num_samples):
+                noise = torch.randn_like(img)
                 #output = model(img, torch.tensor([0]).to(device))  
                 sample, *_ = diffusion.p_sample_loop_known(
                         model,
                         img.shape,
                         img,
                         step = diffusion_step,
+                        noise = noise,
                         clip_denoised=True,
                         model_kwargs=model_kwargs
                     )
-                pred = sample[0].squeeze(0).cpu()
-                pred = pred / (pred.max() + 1e-8)    # avoid divide by 0
-                pred = (pred > 0.3).float()
+                pred = sample[:,-1,:,:].squeeze(0).cpu() # (1,2,256,256) -->(256,256)
+                #pred = pred / (pred.max() + 1e-8)    # avoid divide by 0
+                pred = torch.sigmoid(pred)
+                #pred = (pred > 0.3).float()
                 preds.append(pred.numpy())
 
+            for i, pred in enumerate(preds):
+                non_zero_ratio = np.count_nonzero(pred) / np.prod(pred.shape)
+                print(f"[Sample {i}] max={pred.max():.4f}, mean={pred.mean():.4f}, nonzero={non_zero_ratio:.4f}")
+
             # --- STAPLE Ensemble ---
-            staple_pred = run_staple(preds)
+            use_staple = True
+            if use_staple:
+                staple_pred = run_staple(preds)
+                print(staple_pred.shape)
+                binary_pred = (staple_pred > 0.3).astype(np.uint8)
+            else:
+                mean_pred = np.mean(preds, axis=0)
+                binary_pred = (mean_pred > 0.5).astype(np.uint8)
+            nonzero = np.count_nonzero(binary_pred)
+            print(f"[Step {step}] STAPLE mask non-zero pixels: {nonzero}")
             # --- Prepare target ---
             target = target.squeeze(0).cpu()
             target = torch.where(target == 2, torch.tensor(1), target).numpy()  # map label 2 -> 1
 
             # --- Metrics ---
-            dice_scores.append(dice_score(torch.tensor(staple_pred[0]), torch.tensor(target)))
-            iou_scores.append(iou_score(torch.tensor(staple_pred[0]), torch.tensor(target)))
-            if staple_pred.sum() > 0 and target.sum() > 0:
-                hd95_scores.append(hd95(staple_pred[0], target))
+            dice_scores.append(dice_score(torch.tensor(binary_pred), torch.tensor(target)))
+            iou_scores.append(iou_score(torch.tensor(binary_pred), torch.tensor(target)))
+            if binary_pred.sum() > 0 and target.sum() > 0:
+                hd95_scores.append(hd95(binary_pred, target))
             else:
                 hd95_scores.append(np.inf)  # no prediction or ground truth
             
             if step % vis_freq == 0:
-                visualize_prediction(staple_pred[0], target, step, save_dir=save_dir)
+                visualize_prediction(binary_pred, target, step, save_dir=save_dir)
 
             pbar.set_postfix({
                 "Dice": f"{np.mean(dice_scores):.4f}",

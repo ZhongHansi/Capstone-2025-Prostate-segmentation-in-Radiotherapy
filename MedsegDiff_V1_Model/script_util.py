@@ -14,12 +14,12 @@ def diffusion_defaults():
     return dict(
         learn_sigma=True, # Default as False in source code
         diffusion_steps=1000,
-        noise_schedule="linear",
+        noise_schedule="cosine",
         timestep_respacing="",
         use_kl=False,
         predict_xstart=False,
-        rescale_timesteps=False,
-        rescale_learned_sigmas=False,
+        rescale_timesteps=True,
+        rescale_learned_sigmas=True,
     )
 
 
@@ -46,17 +46,17 @@ def model_and_diffusion_defaults():
     res = dict(
         image_size=256,
         num_channels=128,
-        num_res_blocks=2,
-        num_heads=1,
+        num_res_blocks=3,
+        num_heads=4,
         in_ch = 2, # Default as 5 in source code
         num_heads_upsample=-1,
         num_head_channels=-1,
-        attention_resolutions="16", # "16,8" in source code
+        attention_resolutions="16,8", # "16,8" in source code
         channel_mult="",
         dropout=0.0,
         class_cond=False,
         use_checkpoint=False,
-        use_scale_shift_norm=False, # True in source code
+        use_scale_shift_norm=True, # True in source code
         resblock_updown=False,
         use_fp16=False,
         use_new_attention_order=False,

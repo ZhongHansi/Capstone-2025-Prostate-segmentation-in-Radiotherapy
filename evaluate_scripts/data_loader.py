@@ -65,7 +65,11 @@ class SlicedNiiDataset(Dataset):
             image = self.transform(image)  
             label = self.transform(label)
         # Resize
-        
+        # Add batch dim for interpolation
+        image = F.interpolate(image.unsqueeze(0), size=(256, 256), mode='bilinear', align_corners=False).squeeze(0)
+        label = F.interpolate(label.unsqueeze(0).unsqueeze(0).float(), size=(256, 256), mode='nearest').squeeze(0).squeeze(0).long()
+        if image.max() > 0:
+            image = (image - image.min()) / (image.max() - image.min())
         
 
         return image,label
